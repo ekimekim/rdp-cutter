@@ -57,7 +57,7 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 	if start:
 		cut_args += ['-ss', start]
 	if end:
-		cut_args += ['-t', end]
+		cut_args += ['-t', end - start]
 
 	map_args = ['-map', '0:a']
 
@@ -76,3 +76,10 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 	output_args = map_args + filter_args + metadata_args + [dest]
 	input_args = cut_args + ['-i', source]
 	cmd(['ffmpeg'] + input_args + output_args)
+
+
+if __name__ == '__main__':
+	# for testing
+	import sys
+	source, dest, start, end, title, artist, category, fade_in, fade_out = sys.argv[1:]
+	convert(source, dest, int(start), int(end), title, artist, category, int(fade_in), int(fade_out))
