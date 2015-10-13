@@ -61,11 +61,19 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 
 	map_args = ['-map', '0:a']
 
-	filter_args = []
+	filters = []
 	if fade_in:
-		filter_args += ['-filter', format_filter('afade', type='in', duration=fade_in)]
+		filters.append(format_filter('afade', type='in', start_time=0, duration=fade_in))
 	if fade_out:
-		filter_args += ['-filter', format_filter('afade', type='out', start_time=end-fade_out, duration=fade_out)]
+		# we need to know duration, hopefully we can work it out from inputs
+		# if we can't, we fall back to an ffprobe call
+		if not end:
+			end = get_audio_length(source)
+		if not start:
+			start = 0
+		duration = end - start
+		filters.append(format_filter('afade', type='out', start_time=duration-fade_out, duration=fade_out))
+	filter_args = ['-filter', ','.join(filters)] if filters else []
 
 	metadata = dict(title=title, artist=artist, genre=category)
 	metadata_args = sum((
@@ -73,13 +81,26 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 		for k, v in metadata.items() if v
 	), [])
 
-	output_args = map_args + filter_args + metadata_args + [dest]
+	output_args = ['-strict', '-2'] + map_args + filter_args + metadata_args + [dest]
 	input_args = cut_args + ['-i', source]
-	cmd(['ffmpeg'] + input_args + output_args)
+	cmd(['ffmpeg', '-y'] + input_args + output_args)
+
+
+def get_audio_length(filename):
+	args = [
+		'ffprobe',
+		'-select_streams', 'a:0',
+		'-show_entries', 'format=duration',
+		'-of', 'default=noprint_wrappers=1:nokey=1',
+		filename,
+	]
+	output = cmd(args)
+	return int(output)
 
 
 if __name__ == '__main__':
 	# for testing
-	import sys
+	import sys, logging
+	logging.basicConfig(level=logging.DEBUG)
 	source, dest, start, end, title, artist, category, fade_in, fade_out = sys.argv[1:]
 	convert(source, dest, int(start), int(end), title, artist, category, int(fade_in), int(fade_out))
