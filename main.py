@@ -1,22 +1,19 @@
 import json
 
 import gevent
-import gevent.lock
 import gevent.pool
 
 from argh import arg
 from oauth2client.client import SignedJwtAssertionCredentials
 import gspread
 
+from common import gspread_lock
 from cutting import process
 
 SHEET_ID = '1ujf2QYjhlhJx4snZR1Ek5KXR-kA0b7cY5NdS3hu7h4I'
 
 with open('creds.json') as f:
 	CREDS = json.load(f)
-
-# We don't know if gspread is thread-safe/gevent-safe, let's assume no
-gspread_lock = gevent.lock.RLock()
 
 def open_sheet()
 	cred_object = SignedJwtAssertionCredentials(
@@ -39,13 +36,6 @@ def get_rows(sheet):
 	for n, row in enumerate(rows):
 		row['id'] = n + 1
 	return rows
-
-
-def update_column(sheet, row_id, column, value):
-	"""In given row, sets the column with given column name (value in first row) to value"""
-	with gspread_lock:
-		col_id = sheet.row_values(1).index(column) + 1
-		sheet.update_cell(row_id, col_id, value)
 
 
 def get_rows_to_do(sheet, restart_in_progress=False):
