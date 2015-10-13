@@ -21,7 +21,7 @@ def get_rows_to_do(sheet, restart_in_progress=False):
 	for row in get_rows(sheet):
 		if row['Processed by VST'] == 'Ready to Cut':
 			yield row
-		elif restart_in_progress and row['Processed by VST'] == 'Cutting In Progress':
+		elif restart_in_progress and row['Processed by VST'].startswith('Cutting In Progress'):
 			yield row
 
 

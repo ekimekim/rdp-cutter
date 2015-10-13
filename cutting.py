@@ -14,11 +14,12 @@ def process(row):
 	def update_state(state):
 		update_column(row['id'], 'Processed by VST', state)
 
-	update_state('Cutting in Progress')
+	update_state('Cutting in Progress - Downloading')
 	try:
 
 		filebase = '/tmp/{}'.format(uuid4())
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
+		update_state('Cutting in Progress - Processing')
 		convert(
 			source=source_file,
 			dest='{}-cut.m4a'.format(filebase),
@@ -30,6 +31,8 @@ def process(row):
 			fade_in=parse_fade(row['Fade In?']),
 			fade_out=parse_fade(row['Fade Out?']),
 		)
+		update_state('Cutting in Progress - Uploading')
+		raise NotImplementedError # UPTO
 
 	except Exception:
 		logging.exception("Error while cutting {}".format(row))
