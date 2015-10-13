@@ -35,10 +35,14 @@ def start_jobs(jobs, sheet, **kwargs):
 def main(interval=60, restart_in_progress=False, restart_errors=False):
 	jobs = gevent.pool.Group()
 	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
-	while True:
-		start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
-		restart_in_progress = False # restart in progress on first pass only (if at all)
-		gevent.sleep(interval)
+	try:
+		while True:
+			start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
+			restart_in_progress = False # restart in progress on first pass only (if at all)
+			gevent.sleep(interval)
+	except KeyboardInterrupt:
+		print "Waiting for {} jobs".format(len(jobs.greenlets))
+		jobs.join()
 
 
 if __name__ == '__main__':
