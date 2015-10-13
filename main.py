@@ -9,10 +9,9 @@ from common import open_sheet, get_rows
 from cutting import process
 
 
-SHEET_ID = '1ujf2QYjhlhJx4snZR1Ek5KXR-kA0b7cY5NdS3hu7h4I'
+with open('config.json') as f:
+	CONFIG = json.load(f)
 
-with open('creds.json') as f:
-	CREDS = json.load(f)
 
 
 def get_rows_to_do(sheet, restart_in_progress=False):
@@ -33,7 +32,7 @@ def start_jobs(jobs, sheet, restart_in_progress=False):
 
 def main(interval=60, restart_in_progress=False):
 	jobs = gevent.pool.Group()
-	sheet = open_sheet(SHEET_ID, CREDS)
+	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
 	while True:
 		start_jobs(jobs, sheet, restart_in_progress=restart_in_progress)
 		restart_in_progress = False # restart in progress on first pass only (if at all)
