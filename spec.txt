@@ -1,0 +1,28 @@
+Script should pull data from google sheet
+Find any rows in state "Not Yet processed"
+Download given youtube link
+Cut on given cut times, potentially with fade in or out, of varying length
+Include Artist and Title metadata
+Output format: m4a
+Upload result to ??? (anywhere where it can be downloaded at will)
+
+Sheet format (column name: value description)
+Song: Song title, string
+Artist: Song artist, string
+YouTube Link: youtube.com url, potentially with a t= param
+Start Time: Time to start cut. Example is "NmNNs" but you should probably be permissive here.
+End Time: Time to stop cut. Format as per start time.
+Fade In?: "No" or 0 -> no fade in, otherwise numeric seconds of fade in time
+Fade Out?: As per fade in
+Suggested By: ignore
+Category: ignore?
+Notes: ignore
+Processed by VST: enum: Not Yet/???
+Notes from VST: ignore
+(any other): ignore
+
+Questions:
+Where to upload?
+Include category in metadata?
+Add a column for link to processed?
+With a fade in/out, are they included in start-end time, or beyond? eg. if start time is 1m10s with fade in 5, do I start at 1m5s?
