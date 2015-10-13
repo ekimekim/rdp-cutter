@@ -1,3 +1,5 @@
+
+import logging
 from glob import glob
 from uuid import uuid4
 
@@ -30,6 +32,7 @@ def process(row):
 		)
 
 	except Exception:
+		logging.exception("Error while cutting {}".format(row))
 		update_state('Cutting Error')
 		raise
 	else:
