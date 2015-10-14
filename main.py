@@ -34,6 +34,7 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 def start_jobs(jobs, sheet, **kwargs):
 	"""Find any new jobs to do and start them in the background"""
 	for row in get_rows_to_do(sheet, **kwargs):
+		jobs.wait_available()
 		update_column(row['id'], 'Processed by VST', 'In Progress')
 		jobs.spawn(process, row)
 
