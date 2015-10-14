@@ -47,7 +47,7 @@ def start_jobs(jobs, sheet, **kwargs):
 		logging.debug("Started job {}".format(row['id']))
 
 
-def main(interval=60, restart_in_progress=False, restart_errors=False, log_level='DEBUG'):
+def main(interval=10, restart_in_progress=False, restart_errors=False, log_level='DEBUG'):
 	logging.basicConfig(level=log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
 	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
