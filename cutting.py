@@ -38,7 +38,7 @@ def process(sheet, row):
 			fade_out=parse_time(row['Fade Out?']),
 		)
 
-		name = row['Song'] or 'no-title'.format(row['id'])
+		name = str(row['Song']) or 'no-title'.format(row['id'])
 		name = name.replace(' ', '_')
 		name = ''.join(c for c in name.lower() if c in string.letters + string.digits + '._-')
 		name = '{}-{}'.format(row['id'], name)
