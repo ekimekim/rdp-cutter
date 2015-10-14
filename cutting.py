@@ -137,7 +137,7 @@ def parse_time(s):
 	elif 'm' in s:
 		mins, secs = s.rstrip('s').split('m')
 	else:
-		mins, secs = 0, s
+		mins, secs = 0, s.rstrip('s')
 	if not mins:
 		mins = 0
 	if not secs:
