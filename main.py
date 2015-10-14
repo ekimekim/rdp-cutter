@@ -57,8 +57,8 @@ def main(interval=60, restart_in_progress=False, restart_errors=False, log_level
 			restart_in_progress = False # restart in progress on first pass only (if at all)
 			gevent.sleep(interval)
 	except KeyboardInterrupt:
-		print "Waiting for {} jobs".format(len(jobs.greenlets))
-		jobs.join()
+		logging.warning("Interrupt recieved. Waiting for {} jobs".format(len(jobs.greenlets)))
+		jobs.kill(block=True)
 
 
 if __name__ == '__main__':
