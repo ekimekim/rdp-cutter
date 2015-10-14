@@ -1,5 +1,7 @@
 
 import logging
+import os
+import string
 from glob import glob
 from uuid import uuid4
 
@@ -14,15 +16,17 @@ def process(row):
 	def update_state(state):
 		update_column(row['id'], 'Processed by VST', state)
 
-	update_state('Cutting in Progress - Downloading')
 	try:
 
+		update_state('Cutting in Progress - Downloading')
 		filebase = '/tmp/{}'.format(uuid4())
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
+
 		update_state('Cutting in Progress - Processing')
+		dest_file = '{}-cut.m4a'.format(filebase)
 		convert(
 			source=source_file,
-			dest='{}-cut.m4a'.format(filebase),
+			dest=dest_file,
 			start=parse_time(row['Start Time']),
 			end=parse_time(row['End Time']),
 			title=row['Song'],
@@ -31,8 +35,14 @@ def process(row):
 			fade_in=parse_fade(row['Fade In?']),
 			fade_out=parse_fade(row['Fade Out?']),
 		)
+
 		update_state('Cutting in Progress - Uploading')
-		raise NotImplementedError # UPTO
+		name = row['Song'] or 'no-title'.format(row['id'])
+		name = name.replace(' ', '_')
+		name = ''.join(c for c in name.lower() if c in string.letters + string.digits + '._-')
+		name = '{}-{}'.format(row['id'], name)
+		url = upload(dest_file, name)
+		update_column(row['id'], 'Processed Link', url)
 
 	except Exception:
 		logging.exception("Error while cutting {}".format(row))
@@ -102,6 +112,13 @@ def get_audio_length(filename):
 	]
 	output = cmd(args)
 	return int(output)
+
+
+def upload(source, name):
+	_, ext = os.path.splitext(source)
+	name = '{}.{}'.format(name, ext.lstrip('.'))
+	cmd(['scp', source, 'tyranicmoron:public_html/rdp/{}'.format(name)])
+	return 'http://tyranicmoron.uk/~ekimekim/rdp/{}'.format(name)
 
 
 if __name__ == '__main__':
