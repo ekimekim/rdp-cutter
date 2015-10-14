@@ -8,6 +8,8 @@ import argh
 from common import open_sheet, get_rows, update_column
 from cutting import process
 
+MAX_JOBS = 8
+
 
 with open('config.json') as f:
 	CONFIG = json.load(f)
@@ -37,7 +39,7 @@ def start_jobs(jobs, sheet, **kwargs):
 
 
 def main(interval=60, restart_in_progress=False, restart_errors=False):
-	jobs = gevent.pool.Group()
+	jobs = gevent.pool.Pool(MAX_JOBS)
 	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
 	try:
 		while True:
