@@ -68,6 +68,7 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 		return '{}={}'.format(name, ':'.join('{}={}'.format(k, v) for k, v in kwargs.items()))
 
 	def ffescape(s):
+		s = str(s)
 		# our technique here, rather than trying to determine all special chars, is to put everything in '
 		# except for ' itself, and escape that.
 		s = s.replace("'", r"'\''")
