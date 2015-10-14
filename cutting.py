@@ -34,8 +34,8 @@ def process(row):
 			title=row['Song'],
 			artist=row['Artist'],
 			category=row['Category'],
-			fade_in=parse_fade(row['Fade In?']),
-			fade_out=parse_fade(row['Fade Out?']),
+			fade_in=parse_time(row['Fade In?']),
+			fade_out=parse_time(row['Fade Out?']),
 		)
 
 		name = row['Song'] or 'no-title'.format(row['id'])
@@ -123,6 +123,26 @@ def upload(source, name):
 	name = '{}.{}'.format(name, ext.lstrip('.'))
 	cmd(['scp', source, 'tyranicmoron:public_html/rdp/{}'.format(name)])
 	return 'http://tyranicmoron.uk/~ekimekim/rdp/{}'.format(name)
+
+
+def parse_time(s):
+	if not isinstance(s, basestring):
+		return s
+	if not s:
+		return
+	if s.strip().lower() in ('no', 'none', '-', ''):
+		return
+	if ':' in s:
+		mins, secs = s.split(':')
+	elif 'm' in s:
+		mins, secs = s.rstrip('s').split('m')
+	else:
+		mins, secs = 0, s
+	if not mins:
+		mins = 0
+	if not secs:
+		secs = 0
+	return int(mins) * 60 + float(secs)
 
 
 if __name__ == '__main__':
