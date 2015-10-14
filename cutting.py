@@ -10,11 +10,11 @@ from easycmd import cmd
 from common import update_column
 
 
-def process(row):
+def process(sheet, row):
 	"""For given row, perform the cutting process"""
 
 	def update_state(state):
-		update_column(row['id'], 'Processed by VST', state)
+		update_column(sheet, row['id'], 'Processed by VST', state)
 
 	filebase = '/tmp/{}'.format(uuid4())
 	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
@@ -44,7 +44,7 @@ def process(row):
 		name = '{}-{}'.format(row['id'], name)
 		logging.debug("Uploading {} as {}".format(dest_file, name))
 		url = upload(dest_file, name)
-		update_column(row['id'], 'Processed Link', url)
+		update_column(sheet, row['id'], 'Processed Link', url)
 
 	except Exception:
 		logging.exception("Error while cutting {}".format(row))
