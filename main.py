@@ -5,7 +5,7 @@ import gevent.pool
 
 import argh
 
-from common import open_sheet, get_rows
+from common import open_sheet, get_rows, update_column
 from cutting import process
 
 
@@ -18,17 +18,21 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 	as already being cut (this is useful for recovery if they were interrupted).
 	If restart_errors, re-attempt any jobs that errored."""
 	for row in get_rows(sheet):
-		if row['Processed by VST'] == 'Ready to Cut':
+		if row['Ready for VST'] != 'Ready':
+			continue
+		state = row['Processed by VST']
+		if state == 'Not Yet':
 			yield row
-		elif restart_in_progress and row['Processed by VST'].startswith('Cutting In Progress'):
+		elif restart_in_progress and state == 'In Progress':
 			yield row
-		elif restart_errors and row['Processed by VST'].startswith('Cutting Error'):
+		elif restart_errors and state == 'Errored':
 			yield row
 
 
 def start_jobs(jobs, sheet, **kwargs):
 	"""Find any new jobs to do and start them in the background"""
 	for row in get_rows_to_do(sheet, **kwargs):
+		update_column(row['id'], 'Processed by VST', 'In Progress')
 		jobs.spawn(process, row)
 
 

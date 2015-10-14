@@ -21,12 +21,9 @@ def process(row):
 	logging.debug("Row values: {}",format(row))
 
 	try:
-
-		update_state('Cutting in Progress - Downloading')
 		logging.debug("Downloading {}".format(filebase))
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
 
-		update_state('Cutting in Progress - Processing')
 		dest_file = '{}-cut.m4a'.format(filebase)
 		logging.debug("Converting {} -> {}".format(source_file, dest_file))
 		convert(
@@ -41,7 +38,6 @@ def process(row):
 			fade_out=parse_fade(row['Fade Out?']),
 		)
 
-		update_state('Cutting in Progress - Uploading')
 		name = row['Song'] or 'no-title'.format(row['id'])
 		name = name.replace(' ', '_')
 		name = ''.join(c for c in name.lower() if c in string.letters + string.digits + '._-')
@@ -52,10 +48,10 @@ def process(row):
 
 	except Exception:
 		logging.exception("Error while cutting {}".format(row))
-		update_state('Cutting Error')
+		update_state('Errored')
 		raise
 	else:
-		update_state('Cutting Complete')
+		update_state('Complete')
 
 	logging.info("Processed row {id}({Song!r}) successfully".format(**row))
 
