@@ -16,14 +16,19 @@ def process(row):
 	def update_state(state):
 		update_column(row['id'], 'Processed by VST', state)
 
+	filebase = '/tmp/{}'.format(uuid4())
+	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
+	logging.debug("Row values: {}",format(row))
+
 	try:
 
 		update_state('Cutting in Progress - Downloading')
-		filebase = '/tmp/{}'.format(uuid4())
+		logging.debug("Downloading {}".format(filebase))
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
 
 		update_state('Cutting in Progress - Processing')
 		dest_file = '{}-cut.m4a'.format(filebase)
+		logging.debug("Converting {} -> {}".format(source_file, dest_file))
 		convert(
 			source=source_file,
 			dest=dest_file,
@@ -41,6 +46,7 @@ def process(row):
 		name = name.replace(' ', '_')
 		name = ''.join(c for c in name.lower() if c in string.letters + string.digits + '._-')
 		name = '{}-{}'.format(row['id'], name)
+		logging.debug("Uploading {} as {}".format(dest_file, name))
 		url = upload(dest_file, name)
 		update_column(row['id'], 'Processed Link', url)
 
@@ -50,6 +56,8 @@ def process(row):
 		raise
 	else:
 		update_state('Cutting Complete')
+
+	logging.info("Processed row {id}({Song!r}) successfully".format(**row))
 
 
 def youtube_dl(link, filebase):
@@ -123,7 +131,7 @@ def upload(source, name):
 
 if __name__ == '__main__':
 	# for testing
-	import sys, logging
+	import sys
 	logging.basicConfig(level=logging.DEBUG)
 	source, dest, start, end, title, artist, category, fade_in, fade_out = sys.argv[1:]
 	convert(source, dest, int(start), int(end), title, artist, category, int(fade_in), int(fade_out))
