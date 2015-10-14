@@ -29,7 +29,7 @@ def get_rows(sheet):
 	with gspread_lock:
 		rows = sheet.get_all_records()
 	for n, row in enumerate(rows):
-		row['id'] = n + 1
+		row['id'] = n + 2
 	return rows
 
 
