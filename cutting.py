@@ -18,7 +18,7 @@ def process(sheet, row):
 
 	filebase = '/tmp/{}'.format(uuid4())
 	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
-	logging.debug("Row values: {}",format(row))
+	logging.debug("Row values: {}".format(row))
 
 	try:
 		logging.debug("Downloading {}".format(filebase))

@@ -1,4 +1,5 @@
 import json
+import logging
 
 import gevent
 import gevent.pool
@@ -19,6 +20,7 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 	"""Return all rows that are ready to be cut. If restart_in_progress, also include rows listed
 	as already being cut (this is useful for recovery if they were interrupted).
 	If restart_errors, re-attempt any jobs that errored."""
+	logging.info("Checking for new jobs")
 	for row in get_rows(sheet):
 		if row['Ready for VST'] != 'Ready':
 			continue
@@ -34,12 +36,15 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 def start_jobs(jobs, sheet, **kwargs):
 	"""Find any new jobs to do and start them in the background"""
 	for row in get_rows_to_do(sheet, **kwargs):
+		logging.debug("Trying to start job {}".format(row['id']))
 		jobs.wait_available()
 		update_column(sheet, row['id'], 'Processed by VST', 'In Progress')
 		jobs.spawn(process, sheet, row)
+		logging.debug("Started job {}".format(row['id']))
 
 
-def main(interval=60, restart_in_progress=False, restart_errors=False):
+def main(interval=60, restart_in_progress=False, restart_errors=False, log_level='DEBUG'):
+	logging.basicConfig(level=log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
 	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
 	try:
