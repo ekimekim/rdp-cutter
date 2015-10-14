@@ -9,6 +9,7 @@ import gevent
 import gevent.pool
 
 import argh
+from backoff import Backoff
 
 from common import open_sheet, get_rows, update_column
 from cutting import process
@@ -25,16 +26,21 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 	as already being cut (this is useful for recovery if they were interrupted).
 	If restart_errors, re-attempt any jobs that errored."""
 	logging.info("Checking for new jobs")
-	for row in get_rows(sheet):
-		if row['Ready for VST'] != 'Ready':
-			continue
-		state = row['Processed by VST']
-		if state == 'Not Yet':
-			yield row
-		elif restart_in_progress and state == 'In Progress':
-			yield row
-		elif restart_errors and state == 'Errored':
-			yield row
+	backoff = Backoff(1, 60)
+	try:
+		for row in get_rows(sheet):
+			if row['Ready for VST'] != 'Ready':
+				continue
+			state = row['Processed by VST']
+			if state == 'Not Yet':
+				yield row
+			elif restart_in_progress and state == 'In Progress':
+				yield row
+			elif restart_errors and state == 'Errored':
+				yield row
+	except Exception:
+		logging.exception("Failed to fetch rows")
+		gevent.sleep(backoff.get())
 
 
 def start_jobs(jobs, sheet, **kwargs):
