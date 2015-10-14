@@ -29,6 +29,9 @@ def get_rows(sheet):
 	with gspread_lock:
 		rows = sheet.get_all_records()
 	for n, row in enumerate(rows):
+		for k in row:
+			if isinstance(row[k], unicode):
+				row[k] = row[k].encode('utf-8')
 		row['id'] = n + 2
 	return rows
 
