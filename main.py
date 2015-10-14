@@ -47,18 +47,22 @@ def start_jobs(jobs, sheet, **kwargs):
 		logging.debug("Started job {}".format(row['id']))
 
 
-def main(interval=10, restart_in_progress=False, restart_errors=False, log_level='DEBUG'):
+def main(interval=10, restart_in_progress=False, restart_errors=False, log_level='DEBUG', one_pass=False):
 	logging.basicConfig(level=log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
 	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
 	try:
 		while True:
 			start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
+			if one_pass:
+				break
 			restart_in_progress = False # restart in progress on first pass only (if at all)
 			gevent.sleep(interval)
 	except KeyboardInterrupt:
-		logging.warning("Interrupt recieved. Waiting for {} jobs".format(len(jobs.greenlets)))
+		logging.warning("Interrupt recieved")
 		jobs.kill(block=True)
+	logging.info("Waiting for {} jobs".format(len(jobs.greenlets)))
+	jobs.join()
 
 
 if __name__ == '__main__':
