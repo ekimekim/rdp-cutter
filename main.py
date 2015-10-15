@@ -30,7 +30,7 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 		if row['Ready for VST'] != 'Ready':
 			continue
 		state = row['Processed by VST']
-		if state == 'Not Yet':
+		if state == 'Not Yet' or not state:
 			yield row
 		elif restart_in_progress and state == 'In Progress':
 			yield row
