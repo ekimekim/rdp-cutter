@@ -26,21 +26,16 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False):
 	as already being cut (this is useful for recovery if they were interrupted).
 	If restart_errors, re-attempt any jobs that errored."""
 	logging.info("Checking for new jobs")
-	backoff = Backoff(1, 60)
-	try:
-		for row in get_rows(sheet):
-			if row['Ready for VST'] != 'Ready':
-				continue
-			state = row['Processed by VST']
-			if state == 'Not Yet':
-				yield row
-			elif restart_in_progress and state == 'In Progress':
-				yield row
-			elif restart_errors and state == 'Errored':
-				yield row
-	except Exception:
-		logging.exception("Failed to fetch rows")
-		gevent.sleep(backoff.get())
+	for row in get_rows(sheet):
+		if row['Ready for VST'] != 'Ready':
+			continue
+		state = row['Processed by VST']
+		if state == 'Not Yet':
+			yield row
+		elif restart_in_progress and state == 'In Progress':
+			yield row
+		elif restart_errors and state == 'Errored':
+			yield row
 
 
 def start_jobs(jobs, sheet, **kwargs):
@@ -54,19 +49,29 @@ def start_jobs(jobs, sheet, **kwargs):
 
 
 def main(interval=10, restart_in_progress=False, restart_errors=False, log_level='DEBUG', one_pass=False):
+	class Stop(BaseException): pass
 	logging.basicConfig(level=log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
-	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
+	backoff = Backoff(1, 60)
 	try:
 		while True:
-			start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
-			if one_pass:
-				break
-			restart_in_progress = False # restart in progress on first pass only (if at all)
-			gevent.sleep(interval)
+			try:
+				sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
+				backoff.reset()
+				while True:
+					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
+					if one_pass:
+						raise Stop
+					restart_in_progress = False # restart in progress on first pass only (if at all)
+					gevent.sleep(interval)
+			except Exception:
+				logging.exception("Main loop failure")
+				gevent.sleep(backoff.get())
 	except KeyboardInterrupt:
 		logging.warning("Interrupt recieved")
 		jobs.kill(block=True)
+	except Stop:
+		pass
 	logging.info("Waiting for {} jobs".format(len(jobs.greenlets)))
 	jobs.join()
 
