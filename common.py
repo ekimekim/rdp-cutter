@@ -10,7 +10,7 @@ from oauth2client.client import SignedJwtAssertionCredentials
 gspread_lock = gevent.lock.RLock()
 
 
-def open_sheet(sheet_id, creds):
+def open_sheet(sheet_id, worksheet_title, creds):
 	cred_object = SignedJwtAssertionCredentials(
 		creds['client_email'],
 		creds['private_key'],
@@ -18,7 +18,7 @@ def open_sheet(sheet_id, creds):
 	)
 	with gspread_lock:
 		client = gspread.authorize(cred_object)
-		return client.open_by_key(sheet_id).sheet1
+		return client.open_by_key(sheet_id).worksheet(worksheet_title)
 
 
 def get_rows(sheet):

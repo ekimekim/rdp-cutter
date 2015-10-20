@@ -56,7 +56,7 @@ def main(interval=10, restart_in_progress=False, restart_errors=False, log_level
 	try:
 		while True:
 			try:
-				sheet = open_sheet(CONFIG['sheet_id'], CONFIG['creds'])
+				sheet = open_sheet(CONFIG['sheet_id'], CONFIG['worksheet_title'], CONFIG['creds'])
 				backoff.reset()
 				while True:
 					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors)
