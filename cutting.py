@@ -74,6 +74,10 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 		s = s.replace("'", r"'\''")
 		return "'{}'".format(s)
 
+	# end is actually "end not including fade out"
+	if end and fade_out:
+		end += fade_out
+
 	cut_args = []
 	if start:
 		cut_args += ['-ss', start]
