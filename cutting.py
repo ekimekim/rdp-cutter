@@ -10,11 +10,12 @@ from easycmd import cmd
 from common import update_column
 
 
-def process(sheet, row):
+def process(sheet, row, no_update_state=False):
 	"""For given row, perform the cutting process"""
 
 	def update_state(state):
-		update_column(sheet, row['id'], 'Processed by VST', state)
+		if not no_update_state:
+			update_column(sheet, row['id'], 'Processed by VST', state)
 
 	filebase = '/tmp/{}'.format(uuid4())
 	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
