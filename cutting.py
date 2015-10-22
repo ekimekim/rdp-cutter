@@ -67,13 +67,6 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 	def format_filter(name, **kwargs):
 		return '{}={}'.format(name, ':'.join('{}={}'.format(k, v) for k, v in kwargs.items()))
 
-	def ffescape(s):
-		s = str(s)
-		# our technique here, rather than trying to determine all special chars, is to put everything in '
-		# except for ' itself, and escape that.
-		s = s.replace("'", r"'\''")
-		return "'{}'".format(s)
-
 	# end is actually "end not including fade out"
 	if end and fade_out:
 		end += fade_out
@@ -102,7 +95,7 @@ def convert(source, dest, start, end, title, artist, category, fade_in, fade_out
 
 	metadata = dict(title=title, artist=artist, genre=category)
 	metadata_args = sum((
-		['-metadata', '{}={}'.format(k, ffescape(v))]
+		['-metadata', '{}={}'.format(k, v)]
 		for k, v in metadata.items() if v
 	), [])
 
