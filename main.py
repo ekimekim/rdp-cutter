@@ -12,7 +12,6 @@ import argh
 from backoff import Backoff
 
 from gtools import backdoor
-backdoor(6666)
 
 from common import open_sheet, get_rows, update_column
 from cutting import process
@@ -56,6 +55,7 @@ def start_jobs(jobs, sheet, no_update_state=False, **kwargs):
 
 
 def main(interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False):
+	backdoor(6666)
 	class Stop(BaseException): pass
 	logging.basicConfig(level=log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
@@ -82,6 +82,20 @@ def main(interval=10, restart_in_progress=False, restart_errors=False, restart_a
 		pass
 	logging.info("Waiting for {} jobs".format(len(jobs.greenlets)))
 	jobs.join()
+
+
+def do_manual(row_id, *args):
+	row_id = int(row_id)
+	extra = [arg.split('=', 1) for arg in args]
+	logging.basicConfig(level=logging.DEBUG)
+	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['worksheet_title'], CONFIG['creds'])
+	row = get_rows(sheet)[row_id-2]
+	assert row['id'] == row_id
+	for k, v in extra:
+		if k not in row:
+			raise Exception("bad override: {!r}".format(k))
+		row[k] = v
+	process(sheet, row, no_update_state=True)
 
 
 if __name__ == '__main__':
