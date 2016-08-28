@@ -1,0 +1,10 @@
+[Unit]
+Description=Google sheets bot for cutting songs
+
+[Service]
+ExecStart=/usr/bin/python2 -m rdp_cutter /etc/rdp-cutter.json
+User=mike
+Group=mike
+
+[Install]
+WantedBy=multi-user.target

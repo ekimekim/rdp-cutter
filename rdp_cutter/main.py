@@ -8,19 +8,14 @@ import logging
 import gevent
 import gevent.pool
 
-import argh
 from backoff import Backoff
-
 from gtools import backdoor
 
 from common import open_sheet, get_rows, update_column
 from cutting import process
 
+
 MAX_JOBS = 8
-
-
-with open('config.json') as f:
-	CONFIG = json.load(f)
 
 
 def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False, restart_all=False):
@@ -54,7 +49,9 @@ def start_jobs(jobs, sheet, no_update_state=False, **kwargs):
 		logging.debug("Started job {}".format(row['id']))
 
 
-def main(interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False):
+def main(config, interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False):
+	with open(config) as f:
+		config = json.load(f)
 	backdoor(6666)
 	class Stop(BaseException): pass
 	logging.basicConfig(level=log_level)
@@ -63,7 +60,7 @@ def main(interval=10, restart_in_progress=False, restart_errors=False, restart_a
 	try:
 		while True:
 			try:
-				sheet = open_sheet(CONFIG['sheet_id'], CONFIG['worksheet_title'], CONFIG['creds'])
+				sheet = open_sheet(config['sheet_id'], config['worksheet_title'], config['creds'])
 				backoff.reset()
 				while True:
 					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors, restart_all=restart_all, no_update_state=no_update_state)
@@ -84,11 +81,13 @@ def main(interval=10, restart_in_progress=False, restart_errors=False, restart_a
 	jobs.join()
 
 
-def do_manual(row_id, *args):
+def do_manual(config, row_id, *args):
+	with open(config) as f:
+		config = json.load(f)
 	row_id = int(row_id)
 	extra = [arg.split('=', 1) for arg in args]
 	logging.basicConfig(level=logging.DEBUG)
-	sheet = open_sheet(CONFIG['sheet_id'], CONFIG['worksheet_title'], CONFIG['creds'])
+	sheet = open_sheet(config['sheet_id'], config['worksheet_title'], config['creds'])
 	row = get_rows(sheet)[row_id-2]
 	assert row['id'] == row_id
 	for k, v in extra:
@@ -97,6 +96,3 @@ def do_manual(row_id, *args):
 		row[k] = v
 	process(sheet, row, no_update_state=True)
 
-
-if __name__ == '__main__':
-	argh.dispatch_command(main)

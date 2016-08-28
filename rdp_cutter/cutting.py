@@ -1,4 +1,5 @@
 
+import errno
 import logging
 import os
 import string
@@ -9,7 +10,7 @@ from easycmd import cmd
 
 from common import update_column
 
-TMPDIR = './tmp'
+TMPDIR = '/tmp/rdp-cutter'
 
 
 def process(sheet, row, no_update_state=False):
@@ -19,10 +20,19 @@ def process(sheet, row, no_update_state=False):
 		if not no_update_state:
 			update_column(sheet, row['id'], 'Processed by VST', state)
 
+	if not os.path.exists(TMPDIR):
+		try:
+			os.mkdir(TMPDIR)
+		except OSError as e:
+			if e.errno != errno.EEXIST:
+				raise
+
 	filebase = '{}/{}'.format(TMPDIR, uuid4())
 	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
 	logging.debug("Row values: {}".format(row))
 
+	source_file = None
+	dest_file = None
 	try:
 		logging.debug("Downloading {}".format(filebase))
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
@@ -55,6 +65,10 @@ def process(sheet, row, no_update_state=False):
 		raise
 	else:
 		update_state('Complete')
+	finally:
+		for name in (source_file, dest_file):
+			if name and os.path.exists(name):
+				os.remove(name)
 
 	logging.info("Processed row {id}({Song!r}) successfully".format(**row))
 
