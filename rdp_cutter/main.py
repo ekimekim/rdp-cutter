@@ -15,14 +15,14 @@ from cutting import process
 MAX_JOBS = 8
 
 
-def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False, restart_all=False):
+def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False, restart_all=False, ignore_not_ready=False):
 	"""Return all rows that are ready to be cut. If restart_in_progress, also include rows listed
 	as already being cut (this is useful for recovery if they were interrupted).
 	If restart_errors, re-attempt any jobs that errored.
 	If restart_all, restart everything."""
 	logging.info("Checking for new jobs")
 	for row in get_rows(sheet):
-		if row['Ready for VST'] != 'Ready':
+		if row['Ready for VST'] != 'Ready' and not ignore_not_ready:
 			continue
 		state = row['Processed by VST']
 		if restart_all:
@@ -46,12 +46,12 @@ def start_jobs(jobs, sheet, no_update_state=False, **kwargs):
 		logging.debug("Started job {}".format(row['id']))
 
 
-def main(config, interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False):
+def main(config, interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False, ignore_not_ready=False):
 	with open(config) as f:
 		config = json.load(f)
 	backdoor(6666)
 	class Stop(BaseException): pass
-	logging.basicConfig(level=log_level)
+	logging.getLogger().setLevel(log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
 	backoff = Backoff(1, 60)
 	try:
@@ -60,7 +60,7 @@ def main(config, interval=10, restart_in_progress=False, restart_errors=False, r
 				sheet = open_sheet(config['sheet_id'], config['worksheet_title'], config['creds'])
 				backoff.reset()
 				while True:
-					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors, restart_all=restart_all, no_update_state=no_update_state)
+					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors, restart_all=restart_all, no_update_state=no_update_state, ignore_not_ready=ignore_not_ready)
 					if one_pass:
 						raise Stop
 					restart_in_progress = False # restart in progress on first pass only (if at all)
