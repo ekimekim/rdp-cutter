@@ -35,14 +35,14 @@ def get_rows_to_do(sheet, restart_in_progress=False, restart_errors=False, resta
 			yield row
 
 
-def start_jobs(jobs, sheet, no_update_state=False, **kwargs):
+def start_jobs(jobs, sheet, no_update_state=False, identity=None, **kwargs):
 	"""Find any new jobs to do and start them in the background"""
 	for row in get_rows_to_do(sheet, **kwargs):
 		logging.debug("Trying to start job {}".format(row['id']))
 		jobs.wait_available()
 		if not no_update_state:
 			update_column(sheet, row['id'], 'Processed by VST', 'In Progress')
-		jobs.spawn(process, sheet, row, no_update_state=no_update_state)
+		jobs.spawn(process, sheet, row, no_update_state=no_update_state, identity=identity)
 		logging.debug("Started job {}".format(row['id']))
 
 
@@ -60,7 +60,7 @@ def main(config, interval=10, restart_in_progress=False, restart_errors=False, r
 				sheet = open_sheet(config['sheet_id'], config['worksheet_title'], config['creds'])
 				backoff.reset()
 				while True:
-					start_jobs(jobs, sheet, restart_in_progress=restart_in_progress, restart_errors=restart_errors, restart_all=restart_all, no_update_state=no_update_state, ignore_not_ready=ignore_not_ready)
+					start_jobs(jobs, sheet, identity=config.get('identity_path'), restart_in_progress=restart_in_progress, restart_errors=restart_errors, restart_all=restart_all, no_update_state=no_update_state, ignore_not_ready=ignore_not_ready)
 					if one_pass:
 						raise Stop
 					restart_in_progress = False # restart in progress on first pass only (if at all)

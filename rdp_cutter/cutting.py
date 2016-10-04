@@ -13,7 +13,7 @@ from common import update_column
 TMPDIR = '/tmp/rdp-cutter'
 
 
-def process(sheet, row, no_update_state=False):
+def process(sheet, row, no_update_state=False, identity=None):
 	"""For given row, perform the cutting process"""
 
 	def update_state(state):
@@ -56,7 +56,7 @@ def process(sheet, row, no_update_state=False):
 		name = ''.join(c for c in name.lower() if c in string.letters + string.digits + '._-')
 		name = '{}-{}'.format(row['id'], name)
 		logging.debug("Uploading {} as {}".format(dest_file, name))
-		url = upload(dest_file, name)
+		url = upload(dest_file, name, identity=identity)
 		update_column(sheet, row['id'], 'Processed Link', url)
 
 	except Exception:
@@ -133,10 +133,14 @@ def get_audio_length(filename):
 	return int(output)
 
 
-def upload(source, name):
+def upload(source, name, identity=None):
 	_, ext = os.path.splitext(source)
 	name = '{}.{}'.format(name, ext.lstrip('.'))
-	cmd(['scp', source, 'tyranicmoron:public_html/rdp/{}'.format(name)])
+	if identity:
+		identity = ['-i', identity]
+	else:
+		identity = []
+	cmd(['scp'] + identity + [source, 'tyranicmoron:public_html/rdp/{}'.format(name)])
 	return 'http://tyranicmoron.uk/~ekimekim/rdp/{}'.format(name)
 
 
