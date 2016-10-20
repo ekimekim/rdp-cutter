@@ -37,7 +37,7 @@ def process(sheet, row, no_update_state=False, identity=None):
 		logging.debug("Downloading {}".format(filebase))
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
 
-		dest_file = '{}-cut.m4a'.format(filebase)
+		dest_file = '{}-cut.mp3'.format(filebase)
 		logging.debug("Converting {} -> {}".format(source_file, dest_file))
 		convert(
 			source=source_file,
