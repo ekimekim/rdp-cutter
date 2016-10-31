@@ -1,4 +1,5 @@
 
+import functools
 import errno
 import logging
 import os
@@ -13,6 +14,17 @@ from common import update_column
 TMPDIR = '/tmp/rdp-cutter'
 
 
+def crit_on_error(fn):
+	@functools.wraps(fn)
+	def wrapper(*args, **kwargs):
+		try:
+			return fn(*args, **kwargs)
+		except Exception:
+			logging.critical("critical function {}(*{}, **{}) failed".format(fn, args, kwargs), exc_info=True)
+	return wrapper
+
+
+@crit_on_error
 def process(sheet, row, no_update_state=False, identity=None):
 	"""For given row, perform the cutting process"""
 
@@ -28,12 +40,12 @@ def process(sheet, row, no_update_state=False, identity=None):
 				raise
 
 	filebase = '{}/{}'.format(TMPDIR, uuid4())
-	logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
-	logging.debug("Row values: {}".format(row))
 
 	source_file = None
 	dest_file = None
 	try:
+		logging.info("Processing row {id}({Song!r}) at path {filebase}".format(filebase=filebase, **row))
+		logging.debug("Row values: {}".format(row))
 		logging.debug("Downloading {}".format(filebase))
 		source_file = youtube_dl(row['YouTube Link'], '{}-source'.format(filebase))
 
@@ -65,12 +77,11 @@ def process(sheet, row, no_update_state=False, identity=None):
 		raise
 	else:
 		update_state('Complete')
+		logging.info("Processed row {id}({Song!r}) successfully".format(**row))
 	finally:
 		for name in (source_file, dest_file):
 			if name and os.path.exists(name):
 				os.remove(name)
-
-	logging.info("Processed row {id}({Song!r}) successfully".format(**row))
 
 
 def youtube_dl(link, filebase):
