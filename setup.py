@@ -8,5 +8,9 @@ setup(
 	description='Google sheets bot for RDP cutting',
 	packages=find_packages(),
 	install_requires=[
+		"argh",
+		"gevent",
+		"gspread",
+		"oauth2client",
 	],
 )
