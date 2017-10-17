@@ -75,7 +75,6 @@ def process(sheet, row, no_update_state=False, identity=None):
 		logging.exception("Error while cutting {}".format(row))
 		update_state('Errored')
 		update_column(sheet, row['id'], 'Error', error_to_text(ex))
-		raise
 	else:
 		update_state('Complete')
 		logging.info("Processed row {id}({Song!r}) successfully".format(**row))
