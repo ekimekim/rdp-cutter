@@ -38,6 +38,10 @@ def get_rows(sheet):
 
 def update_column(sheet, row_id, column, value):
 	"""In given row, sets the column with given column name (value in first row) to value"""
+	# values must be unicode. It's possible but unlikely we could get non-utf-8 here.
+	# let's compromise with replacement chars.
+	if isinstance(value, str):
+		value = value.decode('utf-8', 'replace')
 	with gspread_lock:
 		col_id = sheet.row_values(1).index(column) + 1
 		logging.debug("Updating cell ({},{}) = {!r}".format(row_id, col_id, value))
