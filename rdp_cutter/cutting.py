@@ -7,7 +7,7 @@ import string
 from glob import glob
 from uuid import uuid4
 
-from easycmd import cmd
+from easycmd import cmd, FailedProcessError
 
 from common import update_column
 
@@ -71,9 +71,10 @@ def process(sheet, row, no_update_state=False, identity=None):
 		url = upload(dest_file, name, identity=identity)
 		update_column(sheet, row['id'], 'Processed Link', url)
 
-	except Exception:
+	except Exception as ex:
 		logging.exception("Error while cutting {}".format(row))
 		update_state('Errored')
+		update_column(sheet, row['id'], 'Error', error_to_text(ex))
 		raise
 	else:
 		update_state('Complete')
@@ -82,6 +83,12 @@ def process(sheet, row, no_update_state=False, identity=None):
 		for name in (source_file, dest_file):
 			if name and os.path.exists(name):
 				os.remove(name)
+
+def error_to_text(ex):
+	"""Convert an error during cutting to a slightly more user friendly form, if we can"""
+	if isinstance(ex, FailedProcessError) and ex.args[0] == 'youtube-dl' and ex.exitcode == 1:
+		return 'Download error: {}'.format(ex.stderr)
+	return "Internal error {}: {}".format(type(ex).__name__, ex)
 
 
 def youtube_dl(link, filebase):
