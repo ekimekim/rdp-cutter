@@ -6,7 +6,6 @@ import gevent
 import gevent.pool
 
 from backoff import Backoff
-from gtools import backdoor
 
 from common import open_sheet, get_rows, update_column
 from cutting import process
@@ -49,7 +48,6 @@ def start_jobs(jobs, sheet, no_update_state=False, identity=None, **kwargs):
 def main(config, interval=10, restart_in_progress=False, restart_errors=False, restart_all=False, no_update_state=False, log_level='DEBUG', one_pass=False, ignore_not_ready=False):
 	with open(config) as f:
 		config = json.load(f)
-	backdoor(6666)
 	class Stop(BaseException): pass
 	logging.getLogger().setLevel(log_level)
 	jobs = gevent.pool.Pool(MAX_JOBS)
