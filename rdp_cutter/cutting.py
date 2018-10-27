@@ -157,8 +157,8 @@ def upload(source, name, identity=None):
 		identity = ['-i', identity]
 	else:
 		identity = []
-	cmd(['scp'] + identity + [source, 'tyranicmoron:public_html/rdp/{}'.format(name)])
-	return 'http://tyranicmoron.uk/~ekimekim/rdp/{}'.format(name)
+	cmd(['scp'] + identity + [source, 'starlitghost:public_html/rdp/{}'.format(name)])
+	return 'http://starlitghost.xyz/~ekimekim/rdp/{}'.format(name)
 
 
 def parse_time(s):
