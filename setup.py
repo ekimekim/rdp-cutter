@@ -11,6 +11,6 @@ setup(
 		"argh",
 		"gevent",
 		"gspread",
-		"oauth2client",
+		"oauth2client<2.0.0",
 	],
 )
