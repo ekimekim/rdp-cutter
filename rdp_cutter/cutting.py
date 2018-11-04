@@ -153,12 +153,8 @@ def get_audio_length(filename):
 def upload(source, name, identity=None):
 	_, ext = os.path.splitext(source)
 	name = '{}.{}'.format(name, ext.lstrip('.'))
-	if identity:
-		identity = ['-i', identity]
-	else:
-		identity = []
-	cmd(['scp'] + identity + [source, 'starlitghost:public_html/rdp/{}'.format(name)])
-	return 'http://starlitghost.xyz/~ekimekim/rdp/{}'.format(name)
+	cmd(['cp', source, '/srv/http/rdp/{}'.format(name)])
+	return 'http://136.24.9.73:20080/rdp/{}'.format(name)
 
 
 def parse_time(s):
